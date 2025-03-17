@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 2019, Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/led/led.h>
+
+/ {
+	cpus {
+		// needed for correct ws2812 timing
+        cpu@0 {
+            clock-frequency = <64000000>;
+        };
+    };
+
+	led_strip: ws2812 {
+		compatible = "worldsemi,ws2812-gpio";
+
+		chain-length = <150>; /* arbitrary */
+		color-mapping = <LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_RED
+				 LED_COLOR_ID_BLUE>;
+		/*
+		 * Arduino D11 / P0.25, which was chosen to match the pin
+		 * used in nrf52dk_nrf52832.overlay.
+		 */
+		gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+
+		reset-delay = <3200>;
+
+        delay-t1h = <51>;
+        delay-t1l = <29>;
+        delay-t0h = <26>;
+        delay-t0l = <54>;
+	};
+	
+	// &sw_pwm {
+	// 	status = "okay";
+	// 	channel-gpios = <&gpio0 3 PWM_POLARITY_NORMAL>;
+	// };
+	
+	servo: servo {
+		compatible = "pwm-servo";
+		pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		min-pulse = <PWM_MSEC(1)>;
+		max-pulse = <PWM_MSEC(2)>;
+	};
+	
+
+	// &sw_pwm {
+	// 	channel-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+	// };
+
+	aliases {
+		led-strip = &led_strip;
+	};
+};
+
+&pinctrl {
+	pwm0_default_custom: pwm0_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 27)>, <NRF_PSEL(PWM_OUT0, 0, 26)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm0_csleep: pwm0_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 27)>, <NRF_PSEL(PWM_OUT0, 0, 26)>;
+		    low-power-enable;
+		};
+	};
+	pdm0_default_alt: pdm0_default_alt {
+		group1 {
+			psels = <NRF_PSEL(PDM_CLK, 0, 30)>,
+				<NRF_PSEL(PDM_DIN, 0, 31)>;
+		};
+	};
+};
+
+&pwm0 {
+	pinctrl-0 = <&pwm0_default_custom>;
+	pinctrl-1 = <&pwm0_csleep>;
+	// /delete_property/ pin-ctrl-1;
+	// pinctrl-names = "default";
+};
+
+dmic_dev: &pdm0 {
+	status = "okay";
+	pinctrl-0 = <&pdm0_default_alt>;
+	pinctrl-names = "default";
+	clock-source = "PCLK32M_HFXO";
+};
