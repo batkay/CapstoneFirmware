@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "sensor.h": "c",
+        "led_strip.h": "c",
+        "kernel.h": "c",
+        "led.h": "c",
+        "dmic.h": "c",
+        "log.h": "c"
+    }
+}
