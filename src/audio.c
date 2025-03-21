@@ -1,6 +1,6 @@
 #include <zephyr/kernel.h>
-// #include <zephyr/logging/log.h>
-// // LOG_MODULE_REGISTER(dmic);
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(dmic);
 
 #include <zephyr/audio/dmic.h>
 #include <ei_wrapper.h>
@@ -79,58 +79,15 @@ static void result_ready_cb(int err)
 	
 }
 
-static int do_pdm_transfer(const struct device *dmic_dev,
-			   struct dmic_cfg *cfg,
-			   size_t block_count)
-{
-	int ret;
-
-	// LOG_INF("PCM output rate: %u, channels: %u", cfg->streams[0].pcm_rate, cfg->channel.req_num_chan);
-
-	ret = dmic_configure(dmic_dev, cfg);
-	if (ret < 0) {
-		// LOG_ERR("Failed to configure the driver: %d", ret);
-		return ret;
-	}
-
-	ret = dmic_trigger(dmic_dev, DMIC_TRIGGER_START);
-	if (ret < 0) {
-		// LOG_ERR("START trigger failed: %d", ret);
-		return ret;
-	}
-
-	for (int i = 0; i < block_count; ++i) {
-		void *buffer;
-		uint32_t size;
-
-		ret = dmic_read(dmic_dev, 0, &buffer, &size, READ_TIMEOUT);
-		if (ret < 0) {
-			// LOG_ERR("%d - read failed: %d", i, ret);
-			return ret;
-		}
-
-		// LOG_INF("%d - got buffer %p of %u bytes", i, buffer, size);
-
-		k_mem_slab_free(&mem_slab, buffer);
-	}
-
-	ret = dmic_trigger(dmic_dev, DMIC_TRIGGER_STOP);
-	if (ret < 0) {
-		// LOG_ERR("STOP trigger failed: %d", ret);
-		return ret;
-	}
-
-	return ret;
-}
 
 int audioSample() {
 	int ret;
 	const struct device *const dmic_dev = DEVICE_DT_GET(DT_NODELABEL(dmic));
 
-	// LOG_INF("DMIC sample");
+	LOG_INF("DMIC sample");
 
 	if (!device_is_ready(dmic_dev)) {
-		// LOG_ERR("%s is not ready", dmic_dev->name);
+		LOG_ERR("%s is not ready", dmic_dev->name);
 		return 0;
 	}
 
@@ -162,13 +119,11 @@ int audioSample() {
 	cfg.streams[0].block_size =
 		BLOCK_SIZE(cfg.streams[0].pcm_rate, cfg.channel.req_num_chan);
 
-	// ret = do_pdm_transfer(dmic_dev, &cfg, 2 * BLOCK_COUNT);
-
-	// LOG_INF("PCM output rate: %u, channels: %u", cfg->streams[0].pcm_rate, cfg->channel.req_num_chan);
+	LOG_INF("PCM output rate: %u, channels: %u", cfg.streams[0].pcm_rate, cfg.channel.req_num_chan);
 
 	ret = dmic_configure(dmic_dev, &cfg);
 	if (ret < 0) {
-		// LOG_ERR("Failed to configure the driver: %d", ret);
+		LOG_ERR("Failed to configure the driver: %d", ret);
 		return ret;
 	}
 
@@ -211,7 +166,7 @@ int audioSample() {
 
 	ret = dmic_trigger(dmic_dev, DMIC_TRIGGER_START);
 	if (ret < 0) {
-		// LOG_ERR("START trigger failed: %d", ret);
+		LOG_ERR("START trigger failed: %d", ret);
 		return ret;
 	}
 
@@ -221,11 +176,11 @@ int audioSample() {
 
 		ret = dmic_read(dmic_dev, 0, &buffer, &size, READ_TIMEOUT);
 		if (ret < 0) {
-			// LOG_ERR("%d - read failed: %d", i, ret);
+			LOG_ERR("Read failed: %d", ret);
 			return ret;
 		}
 
-		// LOG_INF("%d - got buffer %p of %u bytes", i, buffer, size);
+		LOG_INF("Got buffer %p of %u bytes", buffer, size);
 
 		err = ei_wrapper_add_data(buffer, size);
 
