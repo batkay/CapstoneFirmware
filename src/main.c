@@ -35,7 +35,7 @@ LOG_MODULE_REGISTER(main);
 int main(void)
 {
 	while (true) {
-
+		k_sleep(K_FOREVER);
 	}
 
 	return 0;
@@ -48,4 +48,7 @@ K_THREAD_DEFINE(gesture_id, STACKSIZE, gestureSample, NULL, NULL, NULL,
 	PRIORITY, 0, 0);
 
 K_THREAD_DEFINE(led_id, STACKSIZE, ledControl, NULL, NULL, NULL,
+	PRIORITY, 0, 0);
+
+K_THREAD_DEFINE(audio_id, 4 * STACKSIZE, audioSample, NULL, NULL, NULL,
 	PRIORITY, 0, 0);
