@@ -8,7 +8,7 @@ LOG_MODULE_REGISTER(dmic);
 #include "audio.h"
 //static const struct device *const dmic_dev = DEVICE_DT_GET(DT_NODELABEL(dmic_dev));
 
-#define MAX_SAMPLE_RATE  16000
+#define MAX_SAMPLE_RATE  4000
 #define SAMPLE_BIT_WIDTH 16
 #define BYTES_PER_SAMPLE sizeof(int16_t)
 /* Milliseconds to wait for a block to be read. */
@@ -22,7 +22,7 @@ LOG_MODULE_REGISTER(dmic);
  * Application, after getting a given block from the driver and processing its
  * data, needs to free that block.
  */
-#define MAX_BLOCK_SIZE   BLOCK_SIZE(MAX_SAMPLE_RATE, 2)
+#define MAX_BLOCK_SIZE   BLOCK_SIZE(MAX_SAMPLE_RATE, 1)
 #define BLOCK_COUNT      4
 K_MEM_SLAB_DEFINE_STATIC(mem_slab, MAX_BLOCK_SIZE, BLOCK_COUNT, 4);
 
@@ -81,8 +81,8 @@ static void result_ready_cb(int err)
 
 
 int audioSample() {
-	int ret;
 	const struct device *const dmic_dev = DEVICE_DT_GET(DT_NODELABEL(dmic));
+	int ret;
 
 	LOG_INF("DMIC sample");
 
@@ -119,7 +119,9 @@ int audioSample() {
 	cfg.streams[0].block_size =
 		BLOCK_SIZE(cfg.streams[0].pcm_rate, cfg.channel.req_num_chan);
 
-	LOG_INF("PCM output rate: %u, channels: %u", cfg.streams[0].pcm_rate, cfg.channel.req_num_chan);
+
+	LOG_INF("PCM output rate: %u, channels: %u",
+		cfg.streams[0].pcm_rate, cfg.channel.req_num_chan);
 
 	ret = dmic_configure(dmic_dev, &cfg);
 	if (ret < 0) {
@@ -127,64 +129,70 @@ int audioSample() {
 		return ret;
 	}
 
+	ret = ei_wrapper_init(result_ready_cb);
 
-
-	int err = ei_wrapper_init(result_ready_cb);
-
-	if (err) {
-		printk("Edge Impulse wrapper failed to initialize (err: %d)\n",
-		       err);
+	if (ret) {
+		printk("Edge Impulse wrapper failed to initialize (err: %d)\n", ret);
 		return 0;
 	};
 
 	printk("Machine learning model sampling frequency: %zu\n",
 	       ei_wrapper_get_classifier_frequency());
+	printk("Machine learning model frame size: %zu\n",
+		ei_wrapper_get_frame_size());
 	printk("Labels assigned by the model:\n");
 	for (size_t i = 0; i < ei_wrapper_get_classifier_label_count(); i++) {
 		printk("- %s\n", ei_wrapper_get_classifier_label(i));
 	}
 	printk("\n");
 
-	/* input_data is defined in input_data.h file. */
-
-	err = ei_wrapper_start_prediction(0, 0);
-	if (err) {
-		printk("Cannot start prediction (err: %d)\n", err);
+	ret = ei_wrapper_start_prediction(0, 0);
+	if (ret) {
+		printk("Cannot start prediction (err: %d)\n", ret);
 	} else {
 		printk("Prediction started...\n");
 	}
-
-	/* Predictions for additional data are triggered in the result ready
-	 * callback. The prediction start can be triggered before the input
-	 * data is provided. In that case the prediction is started right
-	 * after the prediction window is filled with data.
-	 */
-
-
-
-
 
 	ret = dmic_trigger(dmic_dev, DMIC_TRIGGER_START);
 	if (ret < 0) {
 		LOG_ERR("START trigger failed: %d", ret);
 		return ret;
 	}
+	int i = 0;
 
-	while (true) {
+	int count = 0;
+
+	while(true) {
 		void *buffer;
 		uint32_t size;
 
 		ret = dmic_read(dmic_dev, 0, &buffer, &size, READ_TIMEOUT);
 		if (ret < 0) {
-			LOG_ERR("Read failed: %d", ret);
+			LOG_ERR("%d - read failed: %d", i, ret);
 			return ret;
 		}
 
-		LOG_INF("Got buffer %p of %u bytes", buffer, size);
+		LOG_INF("%d - got buffer %p of %u bytes", i, buffer, size);
+		int sizeFloat = size/sizeof(float);
 
-		err = ei_wrapper_add_data(buffer, size);
+		float* bufferFloat = (float*) buffer;
+
+		int buffSize = sizeFloat / ei_wrapper_get_frame_size();
+
+		// ret = ei_wrapper_add_data(bufferFloat, buffSize * ei_wrapper_get_frame_size()); // make sure is multiple of input frame size
+		ret = ei_wrapper_add_data(bufferFloat, ei_wrapper_get_frame_size()); // make sure is multiple of input frame size
+		if (ret) {
+			printk("Cannot provide input data (err: %d)\n", ret);
+			printk("Increase CONFIG_EI_WRAPPER_DATA_BUF_SIZE\n");
+			return 0;
+		}
+		 // throws out excess data rn
 
 		k_mem_slab_free(&mem_slab, buffer);
+		i++;
 	}
+
+	LOG_INF("Exiting");
+	
 	return 0;
 }
