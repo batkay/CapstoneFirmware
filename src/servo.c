@@ -2,9 +2,9 @@
 #include <zephyr/drivers/pwm.h>
 #include "servo.h"
 
-static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(DT_NODELABEL(servo));
-static const uint32_t min_pulse = DT_PROP(DT_NODELABEL(servo), min_pulse);
-static const uint32_t max_pulse = DT_PROP(DT_NODELABEL(servo), max_pulse);
+static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(DT_NODELABEL(servo2));
+static const uint32_t min_pulse = DT_PROP(DT_NODELABEL(servo0), min_pulse);
+static const uint32_t max_pulse = DT_PROP(DT_NODELABEL(servo0), max_pulse);
 
 
 #define STEP PWM_USEC(100)
@@ -48,6 +48,7 @@ int servoCtrl() {
 				pulse_width = max_pulse;
 			}
 		}
+		printk("Set pulse\n");
 		k_sleep(K_SECONDS(1));
 	}
 	return 0;

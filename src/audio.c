@@ -190,6 +190,7 @@ int audioSample() {
 
 		k_mem_slab_free(&mem_slab, buffer);
 		i++;
+		k_sleep(K_MSEC(10)); // 50ms too slow
 	}
 
 	LOG_INF("Exiting");
