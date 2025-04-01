@@ -1,4 +1,5 @@
 To build:
 ''
-west build -b nrf52840dk/nrf52840
+west build -p -b nrf52840dk/nrf52840
 ''
+west build -p -b capstonepcb -- -DBOARD_ROOT=.
