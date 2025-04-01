@@ -1,0 +1,5 @@
+board:
+  name: capstonepcb
+  vendor: batkay
+  socs:
+    - name: nrf52840

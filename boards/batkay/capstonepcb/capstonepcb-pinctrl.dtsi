@@ -1,0 +1,143 @@
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&pinctrl {
+	// Communication protocals
+
+	// i2c
+	i2c0_default: i2c0_default {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
+				<NRF_PSEL(TWIM_SCL, 0, 27)>;
+		};
+	};
+	i2c0_sleep: i2c0_sleep {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
+				<NRF_PSEL(TWIM_SCL, 0, 27)>;
+			low-power-enable;
+		};
+	};
+
+	// pdm
+	pdm0_default_alt: pdm0_default_alt {
+		group1 {
+			psels = <NRF_PSEL(PDM_CLK, 0, 30)>,
+				<NRF_PSEL(PDM_DIN, 0, 31)>;
+		};
+	};
+
+	// qspi
+	qspi_default: qspi_default {
+		group1 {
+			psels = <NRF_PSEL(QSPI_SCK, 0, 19)>,
+				<NRF_PSEL(QSPI_IO0, 0, 20)>,
+				<NRF_PSEL(QSPI_IO1, 0, 21)>,
+				<NRF_PSEL(QSPI_IO2, 0, 22)>,
+				<NRF_PSEL(QSPI_IO3, 0, 23)>,
+				<NRF_PSEL(QSPI_CSN, 0, 17)>;
+			nordic,drive-mode = <NRF_DRIVE_H0H1>;
+		};
+	};
+
+	qspi_sleep: qspi_sleep {
+		group1 {
+			psels = <NRF_PSEL(QSPI_SCK, 0, 19)>,
+				<NRF_PSEL(QSPI_IO0, 0, 20)>,
+				<NRF_PSEL(QSPI_IO1, 0, 21)>,
+				<NRF_PSEL(QSPI_IO2, 0, 22)>,
+				<NRF_PSEL(QSPI_IO3, 0, 23)>;
+			low-power-enable;
+		};
+		group2 {
+			psels = <NRF_PSEL(QSPI_CSN, 0, 17)>;
+			low-power-enable;
+			bias-pull-up;
+		};
+	};
+
+	// pwm
+	pwm0_default_custom: pwm0_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 8)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm0_csleep: pwm0_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 8)>;
+		    low-power-enable;
+		};
+	};
+	pwm1_default_custom: pwm1_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 13)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm1_csleep: pwm1_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 13)>;
+		    low-power-enable;
+		};
+	};
+	pwm2_default_custom: pwm2_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 14)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm2_csleep: pwm2_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 14)>;
+		    low-power-enable;
+		};
+	};
+	pwm3_default_custom: pwm3_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 15)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm3_csleep: pwm3_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 15)>;
+		    low-power-enable;
+		};
+	};
+	pwm4_default_custom: pwm4_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 16)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm4_csleep: pwm4_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 16)>;
+		    low-power-enable;
+		};
+	};
+	pwm5_default_custom: pwm5_default_custom {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 24)>; // put pins in commas here?
+			nordic,invert;
+		};
+	};
+	pwm5_csleep: pwm5_csleep {
+		group1 {
+		    psels = <NRF_PSEL(PWM_OUT0, 0, 24)>;
+		    low-power-enable;
+		};
+	};
+
+};
+
