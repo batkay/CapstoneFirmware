@@ -15,6 +15,11 @@
         };
     };
 
+	led_enable: led_enable {
+        compatible = "power-switch";
+		gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+	};
+
 	led_strip: ws2812 {
 		compatible = "worldsemi,ws2812-gpio";
 
@@ -27,6 +32,23 @@
 		 * used in nrf52dk_nrf52832.overlay.
 		 */
 		gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+
+		reset-delay = <3200>;
+
+        delay-t1h = <51>;
+        delay-t1l = <29>;
+        delay-t0h = <26>;
+        delay-t0l = <54>;
+	};
+	bat_ind: bat_led {
+		compatible = "worldsemi,ws2812-gpio";
+
+		chain-length = <1>; /* arbitrary */
+		color-mapping = <LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_RED
+				 LED_COLOR_ID_BLUE>;
+
+		gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
 
 		reset-delay = <3200>;
 
@@ -60,6 +82,9 @@
 
 	aliases {
 		led-strip = &led_strip;
+		bat-ind = &bat_ind;
+		led-enable = &led_enable;
+
 	};
 };
 &i2c0 {
@@ -67,6 +92,12 @@
 		compatible = "avago,apds9960";
 		reg = <0x39>;
 		int-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+	};
+
+	fuelguage: max17048@6D {
+		compatible = "maxim,max17048";
+		reg = <0x6D>;
+
 	};
 };
 

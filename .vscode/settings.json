@@ -5,6 +5,7 @@
         "kernel.h": "c",
         "led.h": "c",
         "dmic.h": "c",
-        "log.h": "c"
+        "log.h": "c",
+        "gesture.h": "c"
     }
 }

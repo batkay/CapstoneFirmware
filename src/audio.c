@@ -28,11 +28,17 @@ K_MEM_SLAB_DEFINE_STATIC(mem_slab, MAX_BLOCK_SIZE, BLOCK_COUNT, 4);
 
 #define FRAME_ADD_INTERVAL_MS	100
 
+const struct device *const dmic_dev = DEVICE_DT_GET(DT_NODELABEL(dmic));
+
+// #define DEBUG_AUDIO
 
 static void result_ready_cb(int err)
 {
 	if (err) {
+		#ifdef DEBUG_AUDIO
 		printk("Result ready callback returned error (err: %d)\n", err);
+		#endif
+
 		return;
 	}
 
@@ -40,8 +46,13 @@ static void result_ready_cb(int err)
 	float value;
 	float anomaly;
 
+
+	#ifdef DEBUG_AUDIO
+
 	printk("\nClassification results\n");
 	printk("======================\n");
+	#endif
+
 
 	while (true) {
 		err = ei_wrapper_get_next_classification_result(&label, &value, NULL);
@@ -52,28 +63,51 @@ static void result_ready_cb(int err)
 			}
 			break;
 		}
+		#ifdef DEBUG_AUDIO
 
 		printk("Value: %.2f\tLabel: %s\n", (double)value, label);
+		#endif
+
 	}
 
 	if (err) {
+		#ifdef DEBUG_AUDIO
+
 		printk("Cannot get classification results (err: %d)", err);
+		#endif
+
 	} else {
 		if (ei_wrapper_classifier_has_anomaly()) {
 			err = ei_wrapper_get_anomaly(&anomaly);
 			if (err) {
+				#ifdef DEBUG_AUDIO
+
 				printk("Cannot get anomaly (err: %d)\n", err);
+				#endif
+
 			} else {
+				#ifdef DEBUG_AUDIO
+
 				printk("Anomaly: %.2f\n", (double)anomaly);
+				#endif
+
 			}
 		}
 	}
 
 	err = ei_wrapper_start_prediction(0, 1);
 	if (err) {
+		#ifdef DEBUG_AUDIO
+
 		printk("Cannot restart prediction (err: %d)\n", err);
+		#endif
+
 	} else {
+		#ifdef DEBUG_AUDIO
+
 		printk("Prediction restarted...\n");
+		#endif
+
 	}
 
 	
@@ -81,7 +115,6 @@ static void result_ready_cb(int err)
 
 
 int audioSample() {
-	const struct device *const dmic_dev = DEVICE_DT_GET(DT_NODELABEL(dmic));
 	int ret;
 
 	LOG_INF("DMIC sample");
@@ -160,8 +193,6 @@ int audioSample() {
 	}
 	int i = 0;
 
-	int count = 0;
-
 	while(true) {
 		void *buffer;
 		uint32_t size;
@@ -171,24 +202,36 @@ int audioSample() {
 			LOG_ERR("%d - read failed: %d", i, ret);
 			return ret;
 		}
+		#ifdef DEBUG_AUDIO
 
 		LOG_INF("%d - got buffer %p of %u bytes", i, buffer, size);
-		int sizeFloat = size/sizeof(float);
+		#endif
+
+		ret = dmic_trigger(dmic_dev, DMIC_TRIGGER_STOP);
+
+		// int sizeFloat = size/sizeof(float);
 
 		float* bufferFloat = (float*) buffer;
 
-		int buffSize = sizeFloat / ei_wrapper_get_frame_size();
+		// int buffSize = sizeFloat / ei_wrapper_get_frame_size();
 
 		// ret = ei_wrapper_add_data(bufferFloat, buffSize * ei_wrapper_get_frame_size()); // make sure is multiple of input frame size
 		ret = ei_wrapper_add_data(bufferFloat, ei_wrapper_get_frame_size()); // make sure is multiple of input frame size
 		if (ret) {
+			#ifdef DEBUG_AUDIO
+
 			printk("Cannot provide input data (err: %d)\n", ret);
 			printk("Increase CONFIG_EI_WRAPPER_DATA_BUF_SIZE\n");
+			#endif
+
 			return 0;
 		}
 		 // throws out excess data rn
 
 		k_mem_slab_free(&mem_slab, buffer);
+
+		ret = dmic_trigger(dmic_dev, DMIC_TRIGGER_START);
+
 		i++;
 		k_sleep(K_MSEC(10)); // 50ms too slow
 	}

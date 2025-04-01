@@ -48,7 +48,7 @@ int servoCtrl() {
 				pulse_width = max_pulse;
 			}
 		}
-		printk("Set pulse\n");
+		// printk("Set pulse\n");
 		k_sleep(K_SECONDS(1));
 	}
 	return 0;

@@ -1,14 +1,17 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/devicetree.h>
+
 #include "gesture.h"
 
-static const struct device *const gesture = DEVICE_DT_GET_ONE(avago_apds9960);
+const struct device *const gesture = DEVICE_DT_GET(DT_NODELABEL(apds9960));
 
 int gestureSample() {
 	struct sensor_value intensity, pdata;
 
 	printk("APDS9960 sample application\n");
+	device_init(gesture);
 	if (!device_is_ready(gesture)) {
 		printk("sensor: device not ready.\n");
 		return 0;
