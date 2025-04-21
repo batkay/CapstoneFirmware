@@ -4,6 +4,7 @@
 LOG_MODULE_REGISTER(led);
 
 #include "led.h"
+#include "hsv2rgb.h"
 
 
 #define STRIP_NODE		DT_ALIAS(led_strip)
@@ -14,6 +15,8 @@ LOG_MODULE_REGISTER(led);
 #error Unable to determine length of LED strip
 #endif
 
+#define MAX_BRIGHTNESS 50
+
 static struct led_rgb pixels[STRIP_NUM_PIXELS];
 
 static const struct device *const strip = DEVICE_DT_GET(STRIP_NODE);
@@ -21,14 +24,9 @@ static const struct device *const strip = DEVICE_DT_GET(STRIP_NODE);
 
 #define RGB(_r, _g, _b) { .r = (_r), .g = (_g), .b = (_b) }
 
-static const struct led_rgb colors[] = {
-	RGB(0x0f, 0x00, 0x00), /* red */
-	RGB(0x00, 0x0f, 0x00), /* green */
-	RGB(0x00, 0x00, 0x0f), /* blue */
-};
+static struct led_rgb color = RGB(0x00, 0x00, MAX_BRIGHTNESS);
 
 int ledControl() {
-	size_t color = 0;
 	int rc;
 
 	if (device_is_ready(strip)) {
@@ -39,19 +37,25 @@ int ledControl() {
 	}
 
 	LOG_INF("Displaying pattern on strip");
+
+	int idx = 0;
 	while (true) {
-		for (size_t cursor = 0; cursor < ARRAY_SIZE(pixels); cursor++) {
-			memset(&pixels, 0x00, sizeof(pixels));
-			memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));
+		memset(&pixels, 0x00, sizeof(pixels));
+		for (size_t cursor = 0; cursor < STRIP_NUM_PIXELS; cursor++) {
+			color = hsv2rgb((cursor + idx) % 360, 100, (MAX_BRIGHTNESS)/255.0 * 100);
+			memcpy(&pixels[cursor], &color, sizeof(struct led_rgb));
+		}
+		// idx = (idx + 1) % (3 * STRIP_NUM_PIXELS);
+		idx = (idx + 8) % 360;
 
-			rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
-			if (rc) {
-				LOG_ERR("couldn't update strip: %d", rc);
-			}
 
-			k_sleep(K_MSEC(500));
+		rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+		if (rc) {
+			LOG_ERR("couldn't update strip: %d", rc);
 		}
 
-		color = (color + 1) % ARRAY_SIZE(colors);
+		k_sleep(K_MSEC(500));
+		
+
 	}
 }

@@ -37,7 +37,7 @@ int runBattery() {
         memcpy(&ind_color, &(struct led_rgb) RGB(0, 0, 255), sizeof(struct led_rgb));
         while (true) {
             led_strip_update_rgb(led, &ind_color, 1);
-            k_sleep(K_MSEC(5000));
+            k_sleep(K_MSEC(1000));
 
         }
         return 0;
@@ -53,6 +53,6 @@ int runBattery() {
         memcpy(&ind_color, &(struct led_rgb) RGB(0, 255, 0), sizeof(struct led_rgb));
         led_strip_update_rgb(led, &ind_color, 1);
 
-        k_sleep(K_MSEC(5000));
+        k_sleep(K_MSEC(1000));
     }
 }

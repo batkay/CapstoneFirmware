@@ -1,0 +1,10 @@
+&i2c0 {
+
+	apds9960: gesturesensor@39 {
+		compatible = "avago,apds9960";
+		reg = <0x39>;
+		int-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&led_enable>;
+		zephyr,deferred-init;
+	};
+};
