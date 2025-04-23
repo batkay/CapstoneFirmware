@@ -14,13 +14,14 @@
 #define LED_ENABLE DT_ALIAS(led_enable)
 
 const struct device *enable_switch = DEVICE_DT_GET(LED_ENABLE);
-static bool on = false;
+static volatile bool on = false;
 
 bool enabled() {
     return on;
 }
 
 void start() {
+    on = false;
 	// setup load switch GPIO
 	if (!device_is_ready(enable_switch)) {
         printk("Regulator device not ready\n");
@@ -35,4 +36,13 @@ void start() {
     }
 	printf("enable on\n");
     on = true;
+}
+
+void end() {
+    int ret = regulator_disable(enable_switch);
+    if (ret < 0) {
+        printk("Failed to disable regulator: %d\n", ret);
+    } else {
+        printk("Regulator disabled\n");
+    }
 }

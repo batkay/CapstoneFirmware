@@ -3,3 +3,4 @@
 bool enabled();
 
 void start();
+void end();
